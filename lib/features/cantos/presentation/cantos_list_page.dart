@@ -3,11 +3,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
+import 'package:cantor_app/core/router/app_router.dart';
 import 'package:cantor_app/features/cantos/domain/enums.dart';
 import 'package:cantor_app/features/cantos/presentation/providers/cantos_provider.dart';
 import 'package:cantor_app/features/cantos/presentation/widgets/canto_card.dart';
 import 'package:cantor_app/shared/widgets/empty_state.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:cantor_app/shared/widgets/sacred_search_bar.dart';
 
 class CantosListPage extends HookConsumerWidget {
   const CantosListPage({super.key});
@@ -17,113 +19,90 @@ class CantosListPage extends HookConsumerWidget {
     final searchController = useTextEditingController();
     final cantosAsync = ref.watch(cantosFilteredProvider);
     final selectedCat = ref.watch(selectedCategoriaProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.cream,
       body: CustomScrollView(
         slivers: [
-          // App Bar
-          SliverAppBar(
-            expandedHeight: 100,
-            floating: true,
-            pinned: true,
-            backgroundColor: AppColors.navyDeep,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Cantos',
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.white,
+          // ─── Top Safe Area + Title ───
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Text(
+                  'Cantos',
+                  style: AppTypography.serif(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                  ),
                 ),
               ),
-              centerTitle: true,
             ),
           ),
 
-          // Search Bar
+          // ─── Search Bar ───
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: TextField(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+              child: SacredSearchBar(
                 controller: searchController,
                 onChanged: (v) =>
                     ref.read(searchQueryProvider.notifier).state = v,
-                style: GoogleFonts.crimsonPro(fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: 'Buscar cantos...',
-                  hintStyle: GoogleFonts.crimsonPro(
-                    fontSize: 16,
-                    color: AppColors.textMuted,
-                  ),
-                  prefixIcon:
-                      const Icon(Icons.search, color: AppColors.textMuted),
-                  suffixIcon: searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear,
-                              color: AppColors.textMuted),
-                          onPressed: () {
-                            searchController.clear();
-                            ref.read(searchQueryProvider.notifier).state = '';
-                          },
-                        )
-                      : null,
-                ),
               ),
             ),
           ),
 
-          // Category Chips
+          // ─── Category Filter Chips ───
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 48,
+              height: 42,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 children: [
-                  _CategoryChip(
+                  _FilterChip(
                     label: 'Todos',
                     isActive: selectedCat == null,
                     onTap: () => ref
                         .read(selectedCategoriaProvider.notifier)
                         .state = null,
                   ),
-                  ...Categoria.values.map((cat) => _CategoryChip(
-                        label: cat.label,
-                        isActive: selectedCat == cat.name,
-                        onTap: () => ref
-                            .read(selectedCategoriaProvider.notifier)
-                            .state = cat.name,
-                      )),
+                  ...Categoria.values.map(
+                    (cat) => _FilterChip(
+                      label: cat.label,
+                      isActive: selectedCat == cat.name,
+                      onTap: () => ref
+                          .read(selectedCategoriaProvider.notifier)
+                          .state = cat.name,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-          // Section Label
+          // ─── Results Count ───
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
               child: Text(
                 cantosAsync.when(
                   data: (cantos) =>
-                      '${cantos.length} CANTO${cantos.length == 1 ? '' : 'S'}',
-                  loading: () => 'CARGANDO...',
-                  error: (_, __) => 'ERROR',
+                      '${cantos.length} canto${cantos.length == 1 ? '' : 's'}',
+                  loading: () => 'Cargando...',
+                  error: (_, __) => 'Error',
                 ),
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.5,
-                  color: AppColors.textMuted,
-                ),
+                style: AppTypography.sectionLabel,
               ),
             ),
           ),
 
-          // Cantos List
+          // ─── Cantos List ───
           cantosAsync.when(
             data: (cantos) {
               if (cantos.isEmpty) {
@@ -131,7 +110,8 @@ class CantosListPage extends HookConsumerWidget {
                   child: EmptyState(
                     icon: '🎵',
                     title: 'Sin resultados',
-                    subtitle: 'No se encontraron cantos con ese criterio',
+                    subtitle:
+                        'No se encontraron cantos con ese criterio',
                   ),
                 );
               }
@@ -142,16 +122,22 @@ class CantosListPage extends HookConsumerWidget {
                     return CantoCard(
                       canto: canto,
                       animationIndex: index,
-                      onTap: () => context.push('/cantos/${canto.id}'),
+                      onTap: () =>
+                          context.push('/cantos/${canto.id}'),
                     );
                   },
                   childCount: cantos.length,
                 ),
               );
             },
-            loading: () => const SliverFillRemaining(
+            loading: () => SliverFillRemaining(
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.gold),
+                child: CircularProgressIndicator(
+                  color: isDark
+                      ? AppColors.goldLuminous
+                      : AppColors.goldDeep,
+                  strokeWidth: 2,
+                ),
               ),
             ),
             error: (e, _) => SliverFillRemaining(
@@ -166,16 +152,39 @@ class CantosListPage extends HookConsumerWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
+      // ─── FAB ───
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: AppColors.goldGradient,
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? AppColors.goldLuminous : AppColors.goldDeep)
+                  .withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => context.push(kCantoEditor),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          highlightElevation: 0,
+          child: const Icon(Icons.add_rounded,
+              size: 28, color: AppColors.white),
+        ),
+      ),
     );
   }
 }
 
-class _CategoryChip extends StatelessWidget {
+class _FilterChip extends StatelessWidget {
   final String label;
   final bool isActive;
   final VoidCallback onTap;
 
-  const _CategoryChip({
+  const _FilterChip({
     required this.label,
     required this.isActive,
     required this.onTap,
@@ -183,27 +192,45 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor =
+        isDark ? AppColors.goldLuminous : AppColors.goldDeep;
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.navyDeep : Colors.transparent,
+            color: isActive
+                ? activeColor
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isActive ? AppColors.navyDeep : AppColors.parchment,
+              color: isActive
+                  ? activeColor
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                          .withValues(alpha: 0.2)
+                      : AppColors.textSecondary
+                          .withValues(alpha: 0.2)),
             ),
           ),
           child: Center(
             child: Text(
               label,
-              style: GoogleFonts.crimsonPro(
+              style: AppTypography.sans(
                 fontSize: 13,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-                color: isActive ? AppColors.white : AppColors.textMuted,
+                fontWeight:
+                    isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive
+                    ? (isDark ? AppColors.darkBg : AppColors.white)
+                    : (isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.textSecondary),
               ),
             ),
           ),

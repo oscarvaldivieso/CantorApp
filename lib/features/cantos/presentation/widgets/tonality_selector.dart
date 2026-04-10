@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/core/utils/chord_transposer.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class TonalitySelector extends StatelessWidget {
   final String? currentTonality;
@@ -15,13 +15,17 @@ class TonalitySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor =
+        isDark ? AppColors.goldLuminous : AppColors.goldDeep;
+
     return SizedBox(
-      height: 40,
+      height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         itemCount: ChordTransposer.notas.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final nota = ChordTransposer.notas[index];
           final isActive = nota == currentTonality;
@@ -29,23 +33,46 @@ class TonalitySelector extends StatelessWidget {
             onTap: () => onChanged(nota),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: isActive ? AppColors.navyDeep : AppColors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: isActive
+                    ? activeColor
+                    : (isDark
+                        ? AppColors.darkBgSecondary
+                        : AppColors.surfaceElevated),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: isActive ? AppColors.navyDeep : AppColors.parchment,
+                  color: isActive
+                      ? activeColor
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                              .withValues(alpha: 0.2)
+                          : AppColors.textSecondary
+                              .withValues(alpha: 0.15)),
                   width: isActive ? 2 : 1,
                 ),
+                boxShadow: isActive && !isDark
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               alignment: Alignment.center,
               child: Text(
                 nota,
-                style: GoogleFonts.crimsonPro(
-                  fontSize: 14,
+                style: AppTypography.mono(
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: isActive ? AppColors.white : AppColors.textDark,
+                  color: isActive
+                      ? (isDark ? AppColors.darkBg : AppColors.white)
+                      : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary),
                 ),
               ),
             ),

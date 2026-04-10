@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/core/router/app_router.dart';
 import 'package:cantor_app/features/hojitas/presentation/providers/hojitas_provider.dart';
 import 'package:cantor_app/features/hojitas/presentation/widgets/hojita_card.dart';
 import 'package:cantor_app/shared/widgets/empty_state.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class HojitasListPage extends ConsumerWidget {
   const HojitasListPage({super.key});
@@ -14,39 +14,40 @@ class HojitasListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hojitasAsync = ref.watch(hojitasStreamProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.cream,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: true,
-            pinned: true,
-            backgroundColor: AppColors.navyDeep,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(gradient: AppColors.navyGradient),
-                padding: const EdgeInsets.fromLTRB(20, 70, 20, 16),
+          // ─── Header ───
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
                       'Mis Hojitas',
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 22,
+                      style: AppTypography.serif(
+                        fontSize: 30,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.white,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       'Hojas de cantos para tus celebraciones',
-                      style: GoogleFonts.crimsonPro(
-                        fontSize: 13,
+                      style: AppTypography.sans(
+                        fontSize: 14,
                         fontStyle: FontStyle.italic,
-                        color: AppColors.white.withValues(alpha: 0.6),
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -54,7 +55,10 @@ class HojitasListPage extends ConsumerWidget {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // ─── Hojitas List ───
           hojitasAsync.when(
             data: (hojitas) {
               if (hojitas.isEmpty) {
@@ -76,15 +80,10 @@ class HojitasListPage extends ConsumerWidget {
                     if (index == 0) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
+                            horizontal: 24, vertical: 4),
                         child: Text(
                           'RECIENTES',
-                          style: GoogleFonts.crimsonPro(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 1.5,
-                            color: AppColors.textMuted,
-                          ),
+                          style: AppTypography.sectionLabel,
                         ),
                       );
                     }
@@ -100,9 +99,14 @@ class HojitasListPage extends ConsumerWidget {
                 ),
               );
             },
-            loading: () => const SliverFillRemaining(
+            loading: () => SliverFillRemaining(
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.gold),
+                child: CircularProgressIndicator(
+                  color: isDark
+                      ? AppColors.goldLuminous
+                      : AppColors.goldDeep,
+                  strokeWidth: 2,
+                ),
               ),
             ),
             error: (e, _) => SliverFillRemaining(
@@ -118,13 +122,12 @@ class HojitasListPage extends ConsumerWidget {
       ),
       floatingActionButton: Container(
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            colors: [AppColors.gold, AppColors.goldLight],
-          ),
+          borderRadius: BorderRadius.circular(16),
+          gradient: AppColors.goldGradient,
           boxShadow: [
             BoxShadow(
-              color: AppColors.gold.withValues(alpha: 0.4),
+              color: (isDark ? AppColors.goldLuminous : AppColors.goldDeep)
+                  .withValues(alpha: 0.35),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -134,7 +137,9 @@ class HojitasListPage extends ConsumerWidget {
           onPressed: () => context.push(kHojitaNueva),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          child: const Icon(Icons.add, size: 28, color: AppColors.white),
+          highlightElevation: 0,
+          child: const Icon(Icons.add_rounded,
+              size: 28, color: AppColors.white),
         ),
       ),
     );

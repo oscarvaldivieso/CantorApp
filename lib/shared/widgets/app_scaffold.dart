@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/core/router/app_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;
@@ -18,36 +18,44 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final index = _currentIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          border: Border(
-            top: BorderSide(color: AppColors.parchment, width: 1),
-          ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkBg : AppColors.surfaceElevated,
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                    color: AppColors.warmShadow.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _NavItem(
-                  icon: '🏠',
+                  icon: Icons.home_rounded,
                   label: 'Inicio',
                   isActive: index == 0,
                   onTap: () => context.go(kHome),
                 ),
                 _NavItem(
-                  icon: '🎵',
+                  icon: Icons.music_note_rounded,
                   label: 'Cantos',
                   isActive: index == 1,
                   onTap: () => context.go(kCantos),
                 ),
                 _NavItem(
-                  icon: '📋',
-                  label: 'Hojitas',
+                  icon: Icons.auto_stories_rounded,
+                  label: 'Hojas',
                   isActive: index == 2,
                   onTap: () => context.go(kHojitas),
                 ),
@@ -61,7 +69,7 @@ class AppScaffold extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  final String icon;
+  final IconData icon;
   final String label;
   final bool isActive;
   final VoidCallback onTap;
@@ -75,33 +83,49 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor =
+        isDark ? AppColors.goldLuminous : AppColors.goldDeep;
+    final inactiveColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.crimsonPro(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-              color: isActive ? AppColors.navyDeep : AppColors.textMuted,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: isActive
+            ? BoxDecoration(
+                color: activeColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              )
+            : null,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: isActive ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                icon,
+                size: 24,
+                color: isActive ? activeColor : inactiveColor,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: isActive ? 4 : 0,
-            height: 4,
-            decoration: const BoxDecoration(
-              color: AppColors.gold,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
+            if (isActive) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: AppTypography.sans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: activeColor,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

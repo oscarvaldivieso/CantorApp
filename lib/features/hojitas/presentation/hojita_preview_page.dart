@@ -3,11 +3,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/features/cantos/presentation/providers/cantos_provider.dart';
 import 'package:cantor_app/features/hojitas/domain/hojita.dart';
 import 'package:cantor_app/features/hojitas/data/pdf_generator.dart';
 import 'package:cantor_app/shared/widgets/empty_state.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
@@ -40,9 +40,14 @@ class HojitaPreviewPage extends ConsumerWidget {
         }
         return _HojitaPreviewContent(hojita: hojita);
       },
-      loading: () => const Scaffold(
+      loading: () => Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.gold),
+          child: CircularProgressIndicator(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.goldLuminous
+                : AppColors.goldDeep,
+            strokeWidth: 2,
+          ),
         ),
       ),
       error: (e, _) => Scaffold(
@@ -61,41 +66,48 @@ class _HojitaPreviewContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('d \'de\' MMMM, yyyy', 'es');
     final fechaStr = dateFormat.format(hojita.fecha);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: isDark ? AppColors.darkBg : AppColors.cream,
       appBar: AppBar(
-        backgroundColor: AppColors.navyDeep,
+        backgroundColor: isDark ? AppColors.darkBg : AppColors.cream,
+        surfaceTintColor: Colors.transparent,
         title: Text(
           'Vista Previa',
-          style: GoogleFonts.playfairDisplay(
+          style: AppTypography.serif(
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: AppColors.white,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.textPrimary,
           ),
         ),
         leading: IconButton(
-          icon: Text(
-            '← Volver',
-            style: GoogleFonts.crimsonPro(
-              fontSize: 13,
-              color: AppColors.gold,
-              fontWeight: FontWeight.w600,
-            ),
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.textPrimary,
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        leadingWidth: 100,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             // Preview Card simulating PDF
-            Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkBgSecondary
+                    : AppColors.surfaceElevated,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: isDark
+                    ? AppColors.goldGlow(opacity: 0.06, blur: 20)
+                    : AppColors.warmElevation(
+                        blur: 20, offset: 6, opacity: 0.08),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -103,64 +115,88 @@ class _HojitaPreviewContent extends StatelessWidget {
                   // Header
                   Container(
                     padding: const EdgeInsets.all(24),
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.navyGradient,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        topRight: Radius.circular(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [
+                                AppColors.goldLuminous
+                                    .withValues(alpha: 0.08),
+                                Colors.transparent,
+                              ]
+                            : [
+                                AppColors.goldDeep
+                                    .withValues(alpha: 0.06),
+                                Colors.transparent,
+                              ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
                       ),
                     ),
                     child: Column(
                       children: [
-                        Text(
-                          '✝',
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 32,
-                            color: AppColors.gold,
-                          ),
+                        Icon(
+                          Icons.church_outlined,
+                          size: 32,
+                          color: isDark
+                              ? AppColors.goldLuminous
+                              : AppColors.goldDeep,
                         ),
                         if (hojita.parroquiaNombre != null &&
                             hojita.parroquiaNombre!.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
                             hojita.parroquiaNombre!.toUpperCase(),
-                            style: GoogleFonts.crimsonPro(
+                            style: AppTypography.sans(
                               fontSize: 10,
-                              color: AppColors.white,
                               letterSpacing: 2,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
                         const SizedBox(height: 8),
                         Text(
                           hojita.titulo,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 20,
+                          style: AppTypography.serif(
+                            fontSize: 22,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.white,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
                         Text(
                           fechaStr,
-                          style: GoogleFonts.crimsonPro(
+                          style: AppTypography.sans(
                             fontSize: 13,
                             fontStyle: FontStyle.italic,
-                            color: AppColors.gold,
+                            color: isDark
+                                ? AppColors.goldLuminous
+                                : AppColors.goldDeep,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  // Divider dorado
+                  // Gold divider
                   Container(
                     height: 2,
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
                           Colors.transparent,
-                          AppColors.gold,
+                          isDark
+                              ? AppColors.goldLuminous
+                              : AppColors.goldDeep,
                           Colors.transparent,
                         ],
                       ),
@@ -170,50 +206,72 @@ class _HojitaPreviewContent extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(20),
                     child: Column(
-                      children: hojita.cantos.asMap().entries.map((entry) {
+                      children: hojita.cantos
+                          .asMap()
+                          .entries
+                          .map((entry) {
                         final index = entry.key + 1;
                         final item = entry.value;
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
+                          padding:
+                              const EdgeInsets.only(bottom: 14),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
                               Container(
                                 width: 28,
                                 height: 28,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.gold,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.goldLuminous
+                                          .withValues(alpha: 0.12)
+                                      : AppColors.goldDeep
+                                          .withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
                                   '$index',
-                                  style: GoogleFonts.playfairDisplay(
-                                    fontSize: 14,
+                                  style: AppTypography.sans(
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.white,
+                                    color: isDark
+                                        ? AppColors.goldLuminous
+                                        : AppColors.goldDeep,
                                   ),
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       item.cantoTitulo,
-                                      style: GoogleFonts.crimsonPro(
+                                      style: AppTypography.sans(
                                         fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.textDark,
+                                        fontWeight:
+                                            FontWeight.w600,
+                                        color: isDark
+                                            ? AppColors
+                                                .darkTextPrimary
+                                            : AppColors
+                                                .textPrimary,
                                       ),
                                     ),
                                     Text(
-                                      '${item.cantoAutor} • ${_categoriaLabel(item.cantoCategoria)}',
-                                      style: GoogleFonts.crimsonPro(
+                                      '${item.cantoAutor} · ${_categoriaLabel(item.cantoCategoria)}',
+                                      style: AppTypography.sans(
                                         fontSize: 12,
-                                        fontStyle: FontStyle.italic,
-                                        color: AppColors.textMuted,
+                                        fontStyle:
+                                            FontStyle.italic,
+                                        color: isDark
+                                            ? AppColors
+                                                .darkTextSecondary
+                                            : AppColors
+                                                .textSecondary,
                                       ),
                                     ),
                                   ],
@@ -228,17 +286,25 @@ class _HojitaPreviewContent extends StatelessWidget {
                   // Footer
                   Container(
                     padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       border: Border(
-                        top: BorderSide(color: AppColors.parchment),
+                        top: BorderSide(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                                  .withValues(alpha: 0.15)
+                              : AppColors.textSecondary
+                                  .withValues(alpha: 0.1),
+                        ),
                       ),
                     ),
                     child: Text(
-                      'Generado con CantorApp${hojita.parroquiaNombre != null ? ' • ${hojita.parroquiaNombre}' : ''}',
-                      style: GoogleFonts.crimsonPro(
+                      'Generado con CantorApp${hojita.parroquiaNombre != null ? ' · ${hojita.parroquiaNombre}' : ''}',
+                      style: AppTypography.sans(
                         fontSize: 10,
                         fontStyle: FontStyle.italic,
-                        color: AppColors.textMuted,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -254,8 +320,8 @@ class _HojitaPreviewContent extends StatelessWidget {
                 Expanded(
                   child: _ExportButton(
                     label: 'PDF',
-                    emoji: '📄',
-                    color: AppColors.navyDeep,
+                    icon: Icons.picture_as_pdf_outlined,
+                    gradient: AppColors.goldGradient,
                     textColor: AppColors.white,
                     onTap: () => _exportPdf(context, hojita),
                   ),
@@ -263,21 +329,17 @@ class _HojitaPreviewContent extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _ExportButton(
-                    label: 'WhatsApp',
-                    emoji: '💬',
-                    color: AppColors.whatsappGreen,
-                    textColor: AppColors.white,
-                    onTap: () => _sharePdf(context, hojita),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ExportButton(
-                    label: 'Más',
-                    emoji: '📤',
-                    color: AppColors.creamDark,
-                    textColor: AppColors.navyDeep,
-                    borderColor: AppColors.parchment,
+                    label: 'Compartir',
+                    icon: Icons.share_outlined,
+                    gradient: null,
+                    textColor: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                    borderColor: isDark
+                        ? AppColors.darkTextSecondary
+                            .withValues(alpha: 0.2)
+                        : AppColors.textSecondary
+                            .withValues(alpha: 0.15),
                     onTap: () => _sharePdf(context, hojita),
                   ),
                 ),
@@ -292,7 +354,8 @@ class _HojitaPreviewContent extends StatelessWidget {
 
   Future<void> _exportPdf(BuildContext context, Hojita hojita) async {
     try {
-      final pdfBytes = await PdfGenerator.generateHojitaPdf(hojita);
+      final pdfBytes =
+          await PdfGenerator.generateHojitaPdf(hojita);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
         name: '${hojita.titulo}.pdf',
@@ -308,7 +371,8 @@ class _HojitaPreviewContent extends StatelessWidget {
 
   Future<void> _sharePdf(BuildContext context, Hojita hojita) async {
     try {
-      final pdfBytes = await PdfGenerator.generateHojitaPdf(hojita);
+      final pdfBytes =
+          await PdfGenerator.generateHojitaPdf(hojita);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${hojita.titulo}.pdf');
       await file.writeAsBytes(pdfBytes);
@@ -346,16 +410,16 @@ class _HojitaPreviewContent extends StatelessWidget {
 
 class _ExportButton extends StatelessWidget {
   final String label;
-  final String emoji;
-  final Color color;
+  final IconData icon;
+  final Gradient? gradient;
   final Color textColor;
   final Color? borderColor;
   final VoidCallback onTap;
 
   const _ExportButton({
     required this.label,
-    required this.emoji,
-    required this.color,
+    required this.icon,
+    this.gradient,
     required this.textColor,
     this.borderColor,
     required this.onTap,
@@ -366,21 +430,31 @@ class _ExportButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(14),
           border: borderColor != null
               ? Border.all(color: borderColor!)
+              : null,
+          boxShadow: gradient != null
+              ? [
+                  BoxShadow(
+                    color: AppColors.goldDeep
+                        .withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : null,
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 4),
+            Icon(icon, size: 22, color: textColor),
+            const SizedBox(height: 6),
             Text(
               label,
-              style: GoogleFonts.crimsonPro(
+              style: AppTypography.sans(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: textColor,

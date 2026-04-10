@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cantor_app/core/theme/app_colors.dart';
-import 'package:cantor_app/features/hojitas/domain/hojita.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
+import 'package:cantor_app/features/hojitas/domain/hojita.dart';
 
 class HojitaCard extends StatelessWidget {
   final Hojita hojita;
@@ -18,145 +18,193 @@ class HojitaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('d MMM yyyy', 'es');
-    final firstCanto =
-        hojita.cantos.isNotEmpty ? hojita.cantos.first.cantoTitulo : '';
-    final tipoLabel = _tipoLabel(hojita.tipoMisa);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cantosCount = hojita.cantos.length;
+    final dateStr = DateFormat('d MMM yyyy', 'es').format(hojita.fecha);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 300 + (animationIndex * 50)),
-      curve: Curves.easeOut,
+      duration: Duration(milliseconds: 350 + (animationIndex * 40)),
+      curve: Curves.easeOutCubic,
       builder: (context, value, child) {
         return Opacity(
           opacity: value,
           child: Transform.translate(
-            offset: Offset(0, 20 * (1 - value)),
+            offset: Offset(0, 16 * (1 - value)),
             child: child,
           ),
         );
       },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: InkWell(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        child: GestureDetector(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          splashColor: AppColors.gold.withValues(alpha: 0.2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: const BoxDecoration(
-                  gradient: AppColors.navyGradient,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkBgSecondary
+                  : AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: isDark
+                  ? null
+                  : AppColors.warmElevation(
+                      blur: 14, offset: 5, opacity: 0.07),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- Gold tint header ---
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            hojita.titulo,
-                            style: GoogleFonts.playfairDisplay(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            dateFormat.format(hojita.fecha),
-                            style: GoogleFonts.crimsonPro(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                              color: AppColors.white.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [
+                              AppColors.goldLuminous.withValues(alpha: 0.12),
+                              AppColors.darkBgSecondary,
+                            ]
+                          : [
+                              AppColors.goldDeep.withValues(alpha: 0.08),
+                              AppColors.surfaceElevated,
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.gold,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        tipoLabel,
-                        style: GoogleFonts.crimsonPro(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.navyDeep,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      // Icon container
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? AppColors.goldLuminous.withValues(alpha: 0.15)
+                              : AppColors.goldDeep.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.library_music_rounded,
+                          size: 18,
+                          color: isDark
+                              ? AppColors.goldLuminous
+                              : AppColors.goldDeep,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              // Body
-              Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (firstCanto.isNotEmpty)
-                            Text(
-                              firstCanto,
-                              style: GoogleFonts.crimsonPro(
-                                fontSize: 14,
-                                color: AppColors.textDark,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${hojita.cantos.length} canto${hojita.cantos.length == 1 ? '' : 's'}',
-                            style: GoogleFonts.crimsonPro(
-                              fontSize: 12,
-                              color: AppColors.textMuted,
-                            ),
+                      const SizedBox(width: 12),
+                      // Title
+                      Expanded(
+                        child: Text(
+                          hojita.titulo,
+                          style: AppTypography.serif(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.textPrimary,
                           ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppColors.parchment,
-                      size: 24,
-                    ),
-                  ],
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: isDark
+                            ? AppColors.darkTextSecondary.withValues(alpha: 0.4)
+                            : AppColors.textSecondary.withValues(alpha: 0.3),
+                        size: 22,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                // --- Body ---
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+                  child: Row(
+                    children: [
+                      // Date
+                      _InfoChip(
+                        icon: Icons.calendar_today_rounded,
+                        label: dateStr,
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 12),
+                      // Canto count
+                      _InfoChip(
+                        icon: Icons.music_note_rounded,
+                        label: '$cantosCount cantos',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 12),
+                      // Tipo misa
+                      _InfoChip(
+                        icon: Icons.church_rounded,
+                        label: hojita.tipoMisa,
+                        isDark: isDark,
+                      ),
+                      const Spacer(),
+                      // Export indicator
+                      if (hojita.exportadaEn != null)
+                        Icon(
+                          Icons.picture_as_pdf_rounded,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.goldLuminous.withValues(alpha: 0.5)
+                              : AppColors.goldDeep.withValues(alpha: 0.4),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  String _tipoLabel(String tipo) {
-    const labels = {
-      'dominical': 'Dominical',
-      'matrimonio': 'Matrimonio',
-      'bautismo': 'Bautismo',
-      'funeral': 'Funeral',
-      'primeraComunion': 'Primera Comunión',
-      'otro': 'Otro',
-    };
-    return labels[tipo] ?? tipo;
+class _InfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isDark;
+
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 13,
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.textSecondary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: AppTypography.sans(
+            fontSize: 12,
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
   }
 }

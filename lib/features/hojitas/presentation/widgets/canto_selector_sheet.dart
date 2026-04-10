@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/features/cantos/domain/canto.dart';
 import 'package:cantor_app/features/cantos/domain/enums.dart';
 import 'package:cantor_app/features/cantos/presentation/providers/cantos_provider.dart';
 import 'package:cantor_app/features/hojitas/domain/hojita_item.dart';
 import 'package:cantor_app/features/hojitas/presentation/providers/hojita_builder_provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class CantoSelectorSheet extends HookConsumerWidget {
   const CantoSelectorSheet({super.key});
@@ -19,6 +19,7 @@ class CantoSelectorSheet extends HookConsumerWidget {
     final selectedCat = useState<String?>(null);
     final cantosAsync = ref.watch(cantosStreamProvider);
     final builder = ref.watch(hojitaBuilderProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -26,9 +27,10 @@ class CantoSelectorSheet extends HookConsumerWidget {
       minChildSize: 0.5,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.cream,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkBg : AppColors.cream,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -38,17 +40,23 @@ class CantoSelectorSheet extends HookConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.parchment,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                          .withValues(alpha: 0.3)
+                      : AppColors.textSecondary
+                          .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Seleccionar Cantos',
-                style: GoogleFonts.playfairDisplay(
+                style: AppTypography.serif(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.navyDeep,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -59,11 +67,23 @@ class CantoSelectorSheet extends HookConsumerWidget {
                 child: TextField(
                   controller: searchCtrl,
                   onChanged: (v) => searchQuery.value = v,
-                  style: GoogleFonts.crimsonPro(fontSize: 16),
+                  style: AppTypography.sans(
+                    fontSize: 16,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.textPrimary,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Buscar cantos...',
-                    hintStyle: GoogleFonts.crimsonPro(color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.search, color: AppColors.textMuted),
+                    hintStyle: AppTypography.sans(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary,
+                    ),
+                    prefixIcon: Icon(Icons.search_rounded,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary),
                   ),
                 ),
               ),
@@ -91,7 +111,7 @@ class CantoSelectorSheet extends HookConsumerWidget {
               ),
               const SizedBox(height: 8),
 
-              // List
+              // Cantos list
               Expanded(
                 child: cantosAsync.when(
                   data: (cantos) {
@@ -101,12 +121,14 @@ class CantoSelectorSheet extends HookConsumerWidget {
                       filtered = filtered
                           .where((c) =>
                               c.titulo.toLowerCase().contains(q) ||
-                              (c.autor?.toLowerCase().contains(q) ?? false))
+                              (c.autor?.toLowerCase().contains(q) ??
+                                  false))
                           .toList();
                     }
                     if (selectedCat.value != null) {
                       filtered = filtered
-                          .where((c) => c.categorias.contains(selectedCat.value))
+                          .where((c) =>
+                              c.categorias.contains(selectedCat.value))
                           .toList();
                     }
                     return ListView.builder(
@@ -122,7 +144,8 @@ class CantoSelectorSheet extends HookConsumerWidget {
                           onToggle: () {
                             if (isSelected) {
                               ref
-                                  .read(hojitaBuilderProvider.notifier)
+                                  .read(
+                                      hojitaBuilderProvider.notifier)
                                   .removeCanto(canto.uuid);
                             } else {
                               final item = HojitaItem()
@@ -135,7 +158,8 @@ class CantoSelectorSheet extends HookConsumerWidget {
                                         : 'varios'
                                 ..tonalidad = canto.tonalidad;
                               ref
-                                  .read(hojitaBuilderProvider.notifier)
+                                  .read(
+                                      hojitaBuilderProvider.notifier)
                                   .addCanto(item);
                             }
                           },
@@ -143,21 +167,36 @@ class CantoSelectorSheet extends HookConsumerWidget {
                       },
                     );
                   },
-                  loading: () => const Center(
-                    child: CircularProgressIndicator(color: AppColors.gold),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(
+                      color: isDark
+                          ? AppColors.goldLuminous
+                          : AppColors.goldDeep,
+                      strokeWidth: 2,
+                    ),
                   ),
-                  error: (e, _) => Center(child: Text(e.toString())),
+                  error: (e, _) =>
+                      Center(child: Text(e.toString())),
                 ),
               ),
 
-              // Bottom bar with count
+              // Bottom bar
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  border: Border(
-                    top: BorderSide(color: AppColors.parchment),
-                  ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkBgSecondary
+                      : AppColors.surfaceElevated,
+                  boxShadow: isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: AppColors.warmShadow
+                                .withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, -3),
+                          ),
+                        ],
                 ),
                 child: SafeArea(
                   child: Row(
@@ -165,25 +204,30 @@ class CantoSelectorSheet extends HookConsumerWidget {
                       Expanded(
                         child: Text(
                           '${builder.cantos.length} canto${builder.cantos.length == 1 ? '' : 's'} seleccionado${builder.cantos.length == 1 ? '' : 's'}',
-                          style: GoogleFonts.crimsonPro(
+                          style: AppTypography.sans(
                             fontSize: 14,
-                            color: AppColors.textMuted,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.navyDeep,
-                          foregroundColor: AppColors.white,
-                          shape: RoundedRectangleBorder(
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 10),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.goldGradient,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        child: Text(
-                          'Listo',
-                          style: GoogleFonts.crimsonPro(
-                            fontWeight: FontWeight.w600,
+                          child: Text(
+                            'Listo',
+                            style: AppTypography.sans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -212,6 +256,10 @@ class _CantoSelectItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor =
+        isDark ? AppColors.goldLuminous : AppColors.goldDeep;
+
     return ListTile(
       onTap: onToggle,
       leading: AnimatedContainer(
@@ -220,42 +268,58 @@ class _CantoSelectItem extends StatelessWidget {
         height: 28,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? AppColors.navyDeep : Colors.transparent,
+          color:
+              isSelected ? activeColor : Colors.transparent,
           border: Border.all(
-            color: isSelected ? AppColors.navyDeep : AppColors.parchment,
+            color: isSelected
+                ? activeColor
+                : (isDark
+                    ? AppColors.darkTextSecondary
+                        .withValues(alpha: 0.3)
+                    : AppColors.textSecondary
+                        .withValues(alpha: 0.2)),
             width: 2,
           ),
         ),
         child: isSelected
-            ? const Icon(Icons.check, color: AppColors.white, size: 16)
+            ? Icon(Icons.check,
+                color: isDark ? AppColors.darkBg : AppColors.white,
+                size: 16)
             : null,
       ),
       title: Text(
         canto.titulo,
-        style: GoogleFonts.crimsonPro(
+        style: AppTypography.sans(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: AppColors.textDark,
+          color: isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.textPrimary,
         ),
       ),
       subtitle: Text(
         canto.autor ?? '',
-        style: GoogleFonts.crimsonPro(
+        style: AppTypography.sans(
           fontSize: 12,
-          color: AppColors.textMuted,
-          fontStyle: FontStyle.italic,
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.textSecondary,
         ),
       ),
       trailing: Text(
         canto.categorias.isNotEmpty
             ? Categoria.values
-                .where((c) => c.name == canto.categorias.first)
-                .firstOrNull
-                ?.label ?? canto.categorias.first
+                    .where(
+                        (c) => c.name == canto.categorias.first)
+                    .firstOrNull
+                    ?.label ??
+                canto.categorias.first
             : '',
-        style: GoogleFonts.crimsonPro(
+        style: AppTypography.sans(
           fontSize: 11,
-          color: AppColors.textMuted,
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.textSecondary,
         ),
       ),
     );
@@ -275,25 +339,42 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor =
+        isDark ? AppColors.goldLuminous : AppColors.goldDeep;
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.navyDeep : Colors.transparent,
+            color: isActive ? activeColor : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isActive ? AppColors.navyDeep : AppColors.parchment,
+              color: isActive
+                  ? activeColor
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                          .withValues(alpha: 0.2)
+                      : AppColors.textSecondary
+                          .withValues(alpha: 0.2)),
             ),
           ),
           child: Text(
             label,
-            style: GoogleFonts.crimsonPro(
+            style: AppTypography.sans(
               fontSize: 12,
-              fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-              color: isActive ? AppColors.white : AppColors.textMuted,
+              fontWeight:
+                  isActive ? FontWeight.w600 : FontWeight.w400,
+              color: isActive
+                  ? (isDark ? AppColors.darkBg : AppColors.white)
+                  : (isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary),
             ),
           ),
         ),

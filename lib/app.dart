@@ -11,6 +11,8 @@ class CantorApp extends StatelessWidget {
       title: 'CantorApp',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       routerConfig: appRouter,
     );
   }

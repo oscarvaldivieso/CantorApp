@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cantor_app/core/theme/app_colors.dart';
+import 'package:cantor_app/core/theme/app_typography.dart';
 import 'package:cantor_app/core/theme/liturgical_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class LiturgicalChip extends StatelessWidget {
   final String tiempo;
@@ -9,6 +10,7 @@ class LiturgicalChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final color = LiturgicalTheme.colorForTiempo(tiempo);
     final label = LiturgicalTheme.labelForTiempo(tiempo);
     final emoji = LiturgicalTheme.emojiForTiempo(tiempo);
@@ -19,9 +21,11 @@ class LiturgicalChip extends StatelessWidget {
         vertical: small ? 4 : 6,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: color.withValues(alpha: isDark ? 0.35 : 0.25),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -30,10 +34,10 @@ class LiturgicalChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.crimsonPro(
+            style: AppTypography.sans(
               fontSize: small ? 10 : 12,
               fontWeight: FontWeight.w600,
-              color: color,
+              color: isDark ? AppColors.darkTextPrimary : color,
             ),
           ),
         ],
