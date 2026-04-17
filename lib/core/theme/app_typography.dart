@@ -12,6 +12,7 @@ class AppTypography {
     Color? color,
     double? height,
     double? letterSpacing,
+    FontStyle? fontStyle,
   }) {
     return GoogleFonts.cormorantGaramond(
       fontSize: fontSize,
@@ -19,6 +20,7 @@ class AppTypography {
       color: color ?? AppColors.textPrimary,
       height: height,
       letterSpacing: letterSpacing,
+      fontStyle: fontStyle,
     );
   }
 

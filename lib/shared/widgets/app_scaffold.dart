@@ -24,20 +24,29 @@ class AppScaffold extends StatelessWidget {
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkBg : AppColors.surfaceElevated,
-          boxShadow: isDark
-              ? null
-              : [
-                  BoxShadow(
-                    color: AppColors.warmShadow.withValues(alpha: 0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
+          color: isDark
+              ? AppColors.darkBg.withValues(alpha: 0.95)
+              : AppColors.surfaceElevated.withValues(alpha: 0.95),
+          border: Border(
+            top: BorderSide(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : AppColors.warmShadow.withValues(alpha: 0.06),
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : AppColors.warmShadow.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
+            ),
+          ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 24),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -93,23 +102,27 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isActive ? 20 : 16,
+          vertical: 10,
+        ),
         decoration: isActive
             ? BoxDecoration(
-                color: activeColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                color: activeColor.withValues(alpha: isDark ? 0.12 : 0.08),
+                borderRadius: BorderRadius.circular(20),
               )
             : null,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedScale(
-              scale: isActive ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 200),
+              scale: isActive ? 1.05 : 1.0,
+              duration: const Duration(milliseconds: 250),
               child: Icon(
                 icon,
-                size: 24,
+                size: 22,
                 color: isActive ? activeColor : inactiveColor,
               ),
             ),
