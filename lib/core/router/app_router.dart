@@ -49,17 +49,17 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(
-      path: kCantoDetail,
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id']!);
-        return CantoDetailPage(cantoId: id);
-      },
-    ),
-    GoRoute(
       path: kCantoEditor,
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const CantoEditorPage(),
+    ),
+    GoRoute(
+      path: kCantoDetail,
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+        return CantoDetailPage(cantoId: id);
+      },
     ),
     GoRoute(
       path: kHojitaNueva,
@@ -70,7 +70,7 @@ final appRouter = GoRouter(
       path: kHojitaPreview,
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final id = int.parse(state.pathParameters['id']!);
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
         return HojitaPreviewPage(hojitaId: id);
       },
     ),

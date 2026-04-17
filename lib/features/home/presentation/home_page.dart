@@ -11,6 +11,7 @@ import 'package:cantor_app/features/cantos/presentation/widgets/canto_card.dart'
 import 'package:cantor_app/features/hojitas/presentation/providers/hojitas_provider.dart';
 import 'package:cantor_app/shared/widgets/liturgical_badge.dart';
 import 'package:cantor_app/shared/widgets/sacred_search_bar.dart';
+import 'package:cantor_app/shared/widgets/vitral_header.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends ConsumerWidget {
@@ -28,23 +29,14 @@ class HomePage extends ConsumerWidget {
       backgroundColor: isDark ? AppColors.darkBg : AppColors.cream,
       body: CustomScrollView(
         slivers: [
-          // Header
+          // Header — Vitral
           SliverToBoxAdapter(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    tiempoColor.withValues(alpha: isDark ? 0.12 : 0.08),
-                    isDark ? AppColors.darkBg : AppColors.cream,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+            child: VitralHeader(
+              tiempo: tiempoActual,
               child: SafeArea(
                 bottom: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

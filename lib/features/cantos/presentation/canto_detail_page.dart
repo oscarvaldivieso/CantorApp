@@ -37,7 +37,7 @@ class CantoDetailPage extends ConsumerWidget {
             slivers: [
               // ─── Collapsible Header ───
               SliverAppBar(
-                expandedHeight: 180,
+                expandedHeight: showChords ? 236 : 180,
                 pinned: true,
                 backgroundColor:
                     isDark ? AppColors.darkBg : AppColors.cream,
@@ -57,6 +57,16 @@ class CantoDetailPage extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                 ],
+                bottom: showChords
+                    ? _TransposeBar(
+                        tonality: tonality,
+                        isDark: isDark,
+                        onChanged: (nota) => ref
+                            .read(selectedTonalityProvider(cantoId)
+                                .notifier)
+                            .state = nota,
+                      )
+                    : null,
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Container(
@@ -129,20 +139,6 @@ class CantoDetailPage extends ConsumerWidget {
                   title: null,
                 ),
               ),
-
-              // ─── Transposition Bar ───
-              if (showChords)
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _TransposeBarDelegate(
-                    tonality: tonality,
-                    isDark: isDark,
-                    onChanged: (nota) => ref
-                        .read(selectedTonalityProvider(cantoId)
-                            .notifier)
-                        .state = nota,
-                  ),
-                ),
 
               // ─── Chord + Lyrics Content ───
               SliverToBoxAdapter(
@@ -480,40 +476,28 @@ class _BottomAction extends StatelessWidget {
   }
 }
 
-// ─── Transposition Bar Persistent Header ───
-class _TransposeBarDelegate extends SliverPersistentHeaderDelegate {
+// ─── Transpose Bar (used as SliverAppBar.bottom) ───
+class _TransposeBar extends StatelessWidget implements PreferredSizeWidget {
   final String? tonality;
   final bool isDark;
   final ValueChanged<String> onChanged;
 
-  _TransposeBarDelegate({
+  const _TransposeBar({
     required this.tonality,
     required this.isDark,
     required this.onChanged,
   });
 
   @override
-  double get minExtent => 56;
+  Size get preferredSize => const Size.fromHeight(56);
 
   @override
-  double get maxExtent => 56;
-
-  @override
-  bool shouldRebuild(covariant _TransposeBarDelegate old) {
-    return tonality != old.tonality || isDark != old.isDark;
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+  Widget build(BuildContext context) {
     return Container(
+      height: 56,
       color: isDark ? AppColors.darkBg : AppColors.cream,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Transpose down
           _TransposeButton(
@@ -521,7 +505,6 @@ class _TransposeBarDelegate extends SliverPersistentHeaderDelegate {
             isDark: isDark,
             onTap: () {
               HapticFeedback.selectionClick();
-              // Transpose down implemented via TonalitySelector
             },
           ),
           const SizedBox(width: 16),

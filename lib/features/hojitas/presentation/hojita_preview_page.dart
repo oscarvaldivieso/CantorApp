@@ -12,10 +12,26 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
-final _hojitaDetailProvider =
-    FutureProvider.family<Hojita?, int>((ref, id) async {
+class _HojitaData {
+  final Hojita hojita;
+  final Map<String, String> letrasMap;
+  const _HojitaData({required this.hojita, required this.letrasMap});
+}
+
+final _hojitaWithLetrasProvider =
+    FutureProvider.family<_HojitaData?, int>((ref, id) async {
   final isar = ref.watch(isarServiceProvider);
-  return isar.getHojitaById(id);
+  final hojita = await isar.getHojitaById(id);
+  if (hojita == null) return null;
+
+  final letrasMap = <String, String>{};
+  for (final item in hojita.cantos) {
+    final canto = await isar.getCantoByUuid(item.cantoUuid);
+    if (canto != null) {
+      letrasMap[item.cantoUuid] = canto.letra;
+    }
+  }
+  return _HojitaData(hojita: hojita, letrasMap: letrasMap);
 });
 
 class HojitaPreviewPage extends ConsumerWidget {
@@ -24,11 +40,11 @@ class HojitaPreviewPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hojitaAsync = ref.watch(_hojitaDetailProvider(hojitaId));
+    final dataAsync = ref.watch(_hojitaWithLetrasProvider(hojitaId));
 
-    return hojitaAsync.when(
-      data: (hojita) {
-        if (hojita == null) {
+    return dataAsync.when(
+      data: (data) {
+        if (data == null) {
           return Scaffold(
             appBar: AppBar(title: const Text('No encontrada')),
             body: const EmptyState(
@@ -38,7 +54,10 @@ class HojitaPreviewPage extends ConsumerWidget {
             ),
           );
         }
-        return _HojitaPreviewContent(hojita: hojita);
+        return _HojitaPreviewContent(
+          hojita: data.hojita,
+          letrasMap: data.letrasMap,
+        );
       },
       loading: () => Scaffold(
         body: Center(
@@ -60,7 +79,11 @@ class HojitaPreviewPage extends ConsumerWidget {
 
 class _HojitaPreviewContent extends StatelessWidget {
   final Hojita hojita;
-  const _HojitaPreviewContent({required this.hojita});
+  final Map<String, String> letrasMap;
+  const _HojitaPreviewContent({
+    required this.hojita,
+    required this.letrasMap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -212,6 +235,10 @@ class _HojitaPreviewContent extends StatelessWidget {
                           .map((entry) {
                         final index = entry.key + 1;
                         final item = entry.value;
+                        final letra = letrasMap[item.cantoUuid];
+                        final coroSnippet = letra != null
+                            ? _getCoroSnippet(letra)
+                            : '';
                         return Padding(
                           padding:
                               const EdgeInsets.only(bottom: 14),
@@ -274,6 +301,30 @@ class _HojitaPreviewContent extends StatelessWidget {
                                                 .textSecondary,
                                       ),
                                     ),
+                                    if (coroSnippet
+                                        .isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        coroSnippet,
+                                        style: AppTypography.sans(
+                                          fontSize: 11,
+                                          fontStyle:
+                                              FontStyle.italic,
+                                          color: isDark
+                                              ? AppColors
+                                                  .darkTextSecondary
+                                                  .withValues(
+                                                      alpha: 0.7)
+                                              : AppColors
+                                                  .textSecondary
+                                                  .withValues(
+                                                      alpha: 0.7),
+                                        ),
+                                        maxLines: 3,
+                                        overflow: TextOverflow
+                                            .ellipsis,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -355,7 +406,7 @@ class _HojitaPreviewContent extends StatelessWidget {
   Future<void> _exportPdf(BuildContext context, Hojita hojita) async {
     try {
       final pdfBytes =
-          await PdfGenerator.generateHojitaPdf(hojita);
+          await PdfGenerator.generateHojitaPdf(hojita, letrasMap);
       await Printing.layoutPdf(
         onLayout: (format) async => pdfBytes,
         name: '${hojita.titulo}.pdf',
@@ -372,7 +423,7 @@ class _HojitaPreviewContent extends StatelessWidget {
   Future<void> _sharePdf(BuildContext context, Hojita hojita) async {
     try {
       final pdfBytes =
-          await PdfGenerator.generateHojitaPdf(hojita);
+          await PdfGenerator.generateHojitaPdf(hojita, letrasMap);
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/${hojita.titulo}.pdf');
       await file.writeAsBytes(pdfBytes);
@@ -405,6 +456,28 @@ class _HojitaPreviewContent extends StatelessWidget {
       'varios': 'Varios',
     };
     return labels[cat] ?? cat;
+  }
+
+  /// Extrae las primeras líneas del Coro para mostrar como adelanto.
+  String _getCoroSnippet(String letra) {
+    final match = RegExp(r'\{C\}').firstMatch(letra);
+    if (match == null) return '';
+
+    final start = match.end;
+    final nextMarker =
+        RegExp(r'\{(E\d+|P|Puente|Final)\}').firstMatch(
+            letra.substring(start));
+    final end = nextMarker != null
+        ? start + nextMarker.start
+        : letra.length;
+
+    return letra
+        .substring(start, end)
+        .trim()
+        .split('\n')
+        .where((l) => l.trim().isNotEmpty)
+        .take(3)
+        .join('\n');
   }
 }
 
